@@ -4,6 +4,10 @@ from scripts.infer import generate_response
 from scripts.blender_runner import run_blender_script
 from scripts.geometry_utils import calculate_bounding_box
 from scripts.config import CAMERA_ANGLES, BRIGHTNESS
+from scripts.chat_system import BlenderChatSystem
+from dotenv import load_dotenv
+
+load_dotenv()  # Add this at the top of the file
 
 def generate_blender_script(model_name, prompt):
     """Generate a Blender script based on the given model and prompt."""
@@ -41,47 +45,60 @@ def calculate_and_render_image(script, obj_name, output_folder, obj_path, blende
 def handle_interactive_mode(args):
     """Handle interactive conversation mode for modeling"""
     print("Welcome to BlenderLLM Interactive Modeling System!")
-    print("Please describe what you want to create:")
+    print("Let's have a conversation about what you want to create.")
+    print("You can chat with the system to refine your idea.")
+    print("Type 'done' when you're ready to generate the model.")
+    print("\nWhat would you like to create?")
     
-    # First user input
-    initial_prompt = input("> ")
+    chat_system = BlenderChatSystem(
+        model_name=args.model_name,
+        openai_api_key="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"  # Or use os.getenv("OPENAI_API_KEY")
+    )
     
-    # First response asking for more details
-    print("\nBlenderLLM: Please give me a more detailed script.")
+    conversation_count = 0
+    max_turns = 4  # Maximum number of conversation turns
     
-    # Get detailed script from user
-    detailed_script = input("> ")
+    while conversation_count < max_turns:
+        # Get user input
+        user_input = input("\nYou: ").strip()
+        
+        if user_input.lower() == 'done':
+            break
+            
+        # Get model response
+        response = chat_system.get_response(user_input)
+        print("\nBlenderLLM:", response)
+        
+        conversation_count += 1
+        if conversation_count < max_turns:
+            print(f"\n({max_turns - conversation_count} turns remaining. Type 'done' when ready.)")
     
-    # Generate the Blender script
-    script = generate_blender_script(args.model_name, detailed_script)
-    print(f"\nGenerated Blender Script:\n{script}")
+    # Generate final script
+    print("\nGenerating final Blender script based on our conversation...")
+    final_script = chat_system.generate_final_script()
+    print("\nGenerated Blender Script:")
+    print(final_script)
     
-    # Ask for object name if not provided
-    obj_name = args.obj_name
-    if obj_name == "cube":  # If using default
-        obj_name = input("\nEnter name for the output file (default: generated_model): ").strip()
-        if not obj_name:
-            obj_name = "generated_model"
+    # Handle object naming and saving
+    obj_name = input("\nEnter name for the output file (default: generated_model): ").strip()
+    if not obj_name:
+        obj_name = "generated_model"
     
-    # Ask for output folder if not provided
-    output_folder = args.output_folder
-    if output_folder == "images/cube":  # If using default
-        output_folder = input(f"\nEnter output folder path (default: output/{obj_name}): ").strip()
-        if not output_folder:
-            output_folder = f"output/{obj_name}"
+    output_folder = input(f"\nEnter output folder path (default: output/{obj_name}): ").strip()
+    if not output_folder:
+        output_folder = f"output/{obj_name}"
     
     # Execute the script
     try:
         obj_path = run_script_and_save_obj(
-            script, obj_name, output_folder, args.blender_executable
+            final_script, obj_name, output_folder, args.blender_executable
         )
         print(f"\nOBJ file saved at {obj_path}")
         
-        # Ask if they want to render images
         render_images = input("\nDo you want to render images? (yes/no): ").lower()
         if render_images == 'yes':
             calculate_and_render_image(
-                script, obj_name, output_folder, obj_path, 
+                final_script, obj_name, output_folder, obj_path, 
                 args.blender_executable, args.brightness
             )
             print(f"Images rendered and saved in {output_folder} folder.")

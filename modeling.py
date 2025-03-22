@@ -7,7 +7,6 @@ from scripts.config import CAMERA_ANGLES, BRIGHTNESS
 from scripts.chat_system import BlenderChatSystem
 from dotenv import load_dotenv
 
-# load_dotenv()  # Loads environment variables from .env file
 
 def generate_blender_script(model_name, prompt):
     "Generate a Blender script based on the given model and prompt."
@@ -109,39 +108,73 @@ def handle_interactive_mode(args):
 def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run Blender Script to Generate 3D Objects and Images.")
-    parser.add_argument("--model_name", type=str, default="FreedomIntelligence/BlenderLLM", 
-                       help="Model path to generate the script.")
-    parser.add_argument("--prompt", type=str, help="Text prompt to describe the object.")
-    parser.add_argument("--obj_name", type=str, default="cube", 
-                       help="Name of the generated object file.")
-    parser.add_argument("--output_folder", type=str, default="images/cube", 
-                       help="Folder to save output files.")
-    parser.add_argument("--blender_executable", type=str, default="blender", 
-                       help="Path to Blender executable.")
-    parser.add_argument("--brightness", type=str, default="Very Dark", 
-                       choices=BRIGHTNESS.keys(), 
-                       help="Brightness level for the rendered image.")
-    parser.add_argument("--interactive", action="store_true", 
-                       help="Start in interactive conversation mode")
-    return parser.parse_args()
+    
+    # Model name argument
+    parser.add_argument("--model_name", 
+        type=str, 
+        default="FreedomIntelligence/BlenderLLM", 
+        help="Model path to generate the script.")
+    
+    # Prompt argument
+    parser.add_argument("--prompt", 
+        type=str, 
+        help="Text prompt to describe the object.")
+    
+    # Object name argument
+    parser.add_argument("--obj_name", 
+        type=str, 
+        default="cube", 
+        help="Name of the generated object file.")
+    
+    # Output folder argument
+    parser.add_argument("--output_folder", 
+        type=str, 
+        default="images/cube", 
+        help="Folder to save output files.")
+    
+    # Blender executable path argument
+    parser.add_argument("--blender_executable", 
+        type=str, 
+        default="blender", 
+        help="Path to Blender executable.")
+    
+    # Brightness level argument
+    parser.add_argument("--brightness", 
+        type=str, 
+        default="Very Dark", 
+        choices=BRIGHTNESS.keys(), 
+        help="Brightness level for the rendered image.")
+    
+    # Interactive mode flag
+    parser.add_argument("--interactive", 
+        action="store_true", 
+        help="Start in interactive conversation mode")
+    
+    return parser.parse_args(), parser  # Return both args and parser
 
 def main():
-    args = parse_arguments()
+    # Step 1: Parse command line arguments
+    args, parser = parse_arguments()  # Get both args and parser
     
+    # Check if interactive mode is enabled
     if args.interactive:
         handle_interactive_mode(args)
     else:
+        # Non-interactive mode
         if not args.prompt:
             parser.error("--prompt is required when not in interactive mode")
             
+        # Generate the Blender script from the prompt
         script = generate_blender_script(args.model_name, args.prompt)
         print(f"The bpy script of {args.obj_name} is:\n{script}")
 
+        # Save the 3D model as .obj file
         obj_path = run_script_and_save_obj(
             script, args.obj_name, args.output_folder, args.blender_executable
         )
         print(f"OBJ file saved at {obj_path}.")
 
+        # Render images of the 3D model
         calculate_and_render_image(
             script, args.obj_name, args.output_folder, obj_path, 
             args.blender_executable, args.brightness
@@ -150,4 +183,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

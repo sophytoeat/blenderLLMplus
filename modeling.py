@@ -7,10 +7,10 @@ from scripts.config import CAMERA_ANGLES, BRIGHTNESS
 from scripts.chat_system import BlenderChatSystem
 from dotenv import load_dotenv
 
-load_dotenv()  # Add this at the top of the file
+# load_dotenv()  # Loads environment variables from .env file
 
 def generate_blender_script(model_name, prompt):
-    """Generate a Blender script based on the given model and prompt."""
+    "Generate a Blender script based on the given model and prompt."
     return generate_response(model_name, prompt)
 
 def ensure_output_folder_exists(output_folder):
@@ -150,3 +150,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -4,8 +4,7 @@ from scripts.infer import generate_response
 from scripts.blender_runner import run_blender_script
 from scripts.geometry_utils import calculate_bounding_box
 from scripts.config import CAMERA_ANGLES, BRIGHTNESS
-from scripts.chat_system import BlenderChatSystem
-from dotenv import load_dotenv
+from chat_system import BlenderChatSystem
 
 
 def generate_blender_script(model_name, prompt):
